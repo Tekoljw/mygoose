@@ -1,0 +1,22 @@
+name: Build CLI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Build CLI
+        run: cargo build --release -p goose-cli
+      
+      - name: Upload CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: goose-cli
+          path: target/release/goose
