@@ -1,0 +1,43 @@
+name: Build Goose v1.20.1
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'Commit SHA or tag to build'
+        required: true
+        default: 'v1.20.1'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.commit_sha }}
+        
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Build Release Binary
+      run: |
+        cargo build --release --locked
+        ls -lh target/release/goose
+        ./target/release/goose --version || echo "Binary built but version check failed"
+        
+    - name: Upload Binary Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: goose-v1.20.1-binary
+        path: target/release/goose
+        retention-days: 7
+        
+    - name: Create Release (Optional)
+      if: startsWith(github.event.inputs.commit_sha, 'v')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.event.inputs.commit_sha }}-built
+        files: target/release/goose
+        generate_release_notes: true
